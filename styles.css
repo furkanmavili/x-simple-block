@@ -1,0 +1,23 @@
+.x-block-button {
+  background-color: transparent;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 0.2s cubic-bezier(0.55, 0.085, 0.68, 0.53);
+  width: 30px;
+  height: 30px;
+  margin-left: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: -32px;
+}
+.x-block-button svg {
+  width: 1.25em;
+  stroke: rgba(224, 36, 94, 1);
+}
+
+.x-block-button:hover {
+  background-color: rgba(224, 36, 94, 0.2);
+}
