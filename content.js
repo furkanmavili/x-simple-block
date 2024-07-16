@@ -131,8 +131,8 @@ class TweetBlocker {
       console.log(`Tweet ${tweetInfo.tweetId} marked as blocked`);
 
       await this.updateBlockCount();
-
-      // tweetElement.style.display = "none";
+      this.showNotification(`<span><b>@${tweetInfo.userName}</b> blocked</span><span style="height: 16px">🥳</span>`);
+      tweetElement.style.display = "none";
       console.log("Tweet blocked:", tweetInfo.tweetText);
     } catch (error) {
       console.error("Error blocking tweet:", error);
@@ -148,6 +148,21 @@ class TweetBlocker {
     } catch (error) {
       console.error("Error updating block count:", error);
     }
+  }
+
+  showNotification(message) {
+    const notification = document.createElement("div");
+    notification.className = "x-notification";
+    notification.innerHTML = message;
+    notification.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: "ease-in" });
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+      notification.style.opacity = 0;
+      setTimeout(() => {
+        notification.remove();
+      }, 1000);
+    }, 3000);
   }
 
   addBlockButtons() {
