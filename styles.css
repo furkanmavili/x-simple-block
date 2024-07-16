@@ -24,13 +24,19 @@
 
 .x-notification {
   position: fixed;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   bottom: 0;
-  right: 0;
+  left: 50%;
+  transform: translate(-50%, 0);
   margin: 1rem;
-  padding: 1rem;
-  background-color: rgba(224, 36, 94, 0.7);
+  padding: 0.5rem;
+  background-color: rgba(224, 36, 94, 1);
   color: white;
   border-radius: 0.5rem;
   box-shadow: 0 0 1rem rgba(0, 0, 0, 0.1);
   z-index: 9999;
+  font-family: TwitterChirp, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  vertical-align: middle;
 }
