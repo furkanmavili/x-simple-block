@@ -5,6 +5,7 @@
     "16": "icon/16.png",
     "32": "icon/32.png"
   },
+  "description": "1-Click blocker for x.com",
   "permissions": ["storage", "activeTab", "tabs"],
   "content_scripts": [
     {
