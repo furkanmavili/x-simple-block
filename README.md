@@ -37,7 +37,7 @@ pnpm install
 3. Build the extension
 
 ```bash
-pnpm install
+pnpm build
 ```
 
 4. Load in Chrome:
