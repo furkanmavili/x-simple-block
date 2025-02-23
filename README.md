@@ -31,17 +31,13 @@ git clone https://github.com/yourusername/x-simple-block.git
 2. Install dependencies
 
 ```bash
-npm install
-# or
-yarn install
+pnpm install
 ```
 
 3. Build the extension
 
 ```bash
-npm run build
-# or
-yarn build
+pnpm install
 ```
 
 4. Load in Chrome:
@@ -50,26 +46,6 @@ yarn build
    - Click "Load unpacked"
    - Select the `dist` folder from the cloned repository
 
-## 🛠️ Development
-
-### Prerequisites
-
-- Node.js (20 or higher)
-- pnpm
-
-### Setup
-
-1. Install dependencies
-
-```bash
-pnpm install
-```
-
-2. Start development server
-
-```bash
-pnpm dev
-```
 
 ## 🐛 Bug Reports
 
