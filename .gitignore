@@ -26,3 +26,6 @@ dist-ssr
 # Config files
 .webextrc
 .webextrc.*
+
+.cursorrules
+dist.zip

@@ -9,7 +9,11 @@ const CONFIG = {
   userLinkSelector: 'a[role="link"]',
   tweetLinkSelector: 'a[href*="/status/"]',
   blockButtonClass: "x-block-button",
-  blockIcon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" ><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" /></svg>`,
+  muteButtonClass: "x-mute-button",
+  blockIcon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" ><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" /></svg>`,
+  muteIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6 4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+  </svg>`,
 };
 
 class Storage {
@@ -73,6 +77,18 @@ class TwitterAPI {
       throw error;
     }
   }
+
+  async muteUser(id) {
+    try {
+      await this.api.post("/1.1/mutes/users/create.json", Qs.stringify({ user_id: id }), {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      });
+      console.log(`User ${id} muted successfully`);
+    } catch (error) {
+      console.error(`Error muting user ${id}:`, error);
+      throw error;
+    }
+  }
 }
 
 class TweetBlocker {
@@ -109,6 +125,14 @@ class TweetBlocker {
     return button;
   }
 
+  createMuteButton(clickHandler) {
+    const button = document.createElement("button");
+    button.innerHTML = CONFIG.muteIcon;
+    button.className = CONFIG.muteButtonClass;
+    button.addEventListener("click", clickHandler);
+    return button;
+  }
+
   extractTweetInfo(tweet) {
     const tweetText = tweet.querySelector(CONFIG.tweetTextSelector)?.textContent ?? "";
     const userNameElement = tweet.querySelector(`${CONFIG.userNameSelector} ${CONFIG.userLinkSelector}`);
@@ -136,6 +160,22 @@ class TweetBlocker {
       console.log("Tweet blocked:", tweetInfo.tweetText);
     } catch (error) {
       console.error("Error blocking tweet:", error);
+    }
+  }
+
+  async muteTweet(tweetInfo, tweetElement) {
+    try {
+      const userId = await this.api.getUserId(tweetInfo.tweetId, tweetInfo.userName);
+      if (!userId) {
+        throw new Error(`User ID not found for ${tweetInfo.userName}`);
+      }
+
+      await this.api.muteUser(userId);
+      this.showNotification(`<span><b>@${tweetInfo.userName}</b> muted</span><span style="height: 16px">🤫</span>`);
+      tweetElement.style.display = "none";
+      console.log("Tweet muted:", tweetInfo.tweetText);
+    } catch (error) {
+      console.error("Error muting tweet:", error);
     }
   }
 
@@ -171,9 +211,27 @@ class TweetBlocker {
       if (!tweet.querySelector(`.${CONFIG.blockButtonClass}`)) {
         const tweetInfo = this.extractTweetInfo(tweet);
         const blockButton = this.createBlockButton(() => this.blockTweet(tweetInfo, tweet));
+        const muteButton = this.createMuteButton(() => this.muteTweet(tweetInfo, tweet));
+
+        // Add show class based on stored settings
+        chrome.storage.sync.get(
+          {
+            showBlockButton: true,
+            showMuteButton: true,
+          },
+          (result) => {
+            if (result.showBlockButton) blockButton.classList.add("show");
+            if (result.showMuteButton) muteButton.classList.add("show");
+          }
+        );
+
         const actionsBar = tweet.querySelector(CONFIG.userNameSelector);
         if (actionsBar) {
-          actionsBar.appendChild(blockButton);
+          const buttonContainer = document.createElement("div");
+          buttonContainer.className = "x-button-container";
+          buttonContainer.appendChild(blockButton);
+          buttonContainer.appendChild(muteButton);
+          actionsBar.appendChild(buttonContainer);
         }
       }
     });
@@ -189,4 +247,54 @@ class TweetBlocker {
 const tweetBlocker = new TweetBlocker();
 tweetBlocker.initialize().then(() => {
   console.log("Tweet blocking script initialized");
+});
+
+// Add this function to detect theme
+function getCurrentTheme() {
+  const html = document.documentElement;
+  const colorScheme = html.style.colorScheme;
+  return colorScheme || "light"; // default to light if not set
+}
+
+// Add a mutation observer to watch for theme changes
+const themeObserver = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    if (mutation.attributeName === "style") {
+      const newTheme = getCurrentTheme();
+      // Notify popup about theme change
+      chrome.runtime.sendMessage({ type: "themeChanged", theme: newTheme });
+    }
+  });
+});
+
+// Start observing theme changes
+themeObserver.observe(document.documentElement, {
+  attributes: true,
+  attributeFilter: ["style"],
+});
+
+// Update the message listener
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "toggleButton") {
+    const buttons = document.querySelectorAll(message.button === "block" ? ".x-block-button" : ".x-mute-button");
+    buttons.forEach((button) => {
+      button.classList.toggle("show", message.show);
+    });
+  } else if (message.type === "getTheme") {
+    const theme = getCurrentTheme();
+    sendResponse({ theme });
+    return true;
+  } else if (message.type === "TOGGLE_BUTTON_VISIBILITY") {
+    const { button, visible } = message;
+
+    if (button === "block") {
+      document.querySelectorAll(".x-block-button").forEach((button) => {
+        button.classList.toggle("show", visible);
+      });
+    } else if (button === "mute") {
+      document.querySelectorAll(".x-mute-button").forEach((button) => {
+        button.classList.toggle("show", visible);
+      });
+    }
+  }
 });

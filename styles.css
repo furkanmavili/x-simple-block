@@ -6,15 +6,15 @@
   transition: background-color 0.2s cubic-bezier(0.55, 0.085, 0.68, 0.53);
   width: 30px;
   height: 30px;
-  margin-left: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: absolute;
-  right: -32px;
+  margin: 0;
 }
+
 .x-block-button svg {
-  width: 1.25em;
+  width: 100%;
+  height: 100%;
   stroke: rgba(224, 36, 94, 1);
 }
 
@@ -39,4 +39,53 @@
   z-index: 9999;
   font-family: TwitterChirp, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   vertical-align: middle;
+}
+
+.x-button-container {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  height: 24px;
+  margin-left: 10px;
+}
+
+.x-button-container.multiple-buttons {
+  right: -54px;
+}
+
+.x-mute-button {
+  background-color: transparent;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 0.2s cubic-bezier(0.55, 0.085, 0.68, 0.53);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.x-mute-button svg {
+  width: 100%;
+  height: 100%;
+  stroke: rgb(255, 149, 0);
+  fill: none;
+}
+
+.x-mute-button:hover {
+  background-color: rgba(255, 149, 0, 0.2);
+}
+
+/* Hide buttons by default */
+.x-block-button,
+.x-mute-button {
+  display: none;
+}
+
+/* Show buttons when they have the 'show' class */
+.x-block-button.show,
+.x-mute-button.show {
+  display: flex;
 }
